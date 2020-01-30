@@ -1,12 +1,10 @@
 package br.com.fiap.livros.controller;
 
-import java.applet.AudioClip;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -17,72 +15,41 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import br.com.fiap.livros.dto.AutorDTO;
 import br.com.fiap.livros.dto.BookDTO;
 import br.com.fiap.livros.dto.CreateBookDTO;
+import br.com.fiap.livros.service.BookService;
 
 @RestController
 @RequestMapping("books")
 public class BookController {
     
-    static List<BookDTO> bookList = new ArrayList<>();
+    private final BookService bookService;
 
-    static {
-        bookList.add(BookDTO.builder()
-                            .id(1)
-                            .titulo("O tombo da moto")
-                            .autor(AutorDTO.builder().id(1).nome("Eu").build())
-                            .dataLancamento(ZonedDateTime.now())
-                            .ISBN("ISBN")
-                            .quantidadeDePaginas(1)
-                            .build());
-
-        bookList.add(BookDTO.builder()
-                            .id(2)
-                            .titulo("O tombo da moto 2")
-                            .autor(AutorDTO.builder().id(1).nome("Eu").build())
-                            .dataLancamento(ZonedDateTime.now())
-                            .ISBN("ISBN")
-                            .quantidadeDePaginas(1)
-                            .build());                            
-
-        bookList.add(BookDTO.builder()
-                            .id(3)
-                            .titulo("O tombo da moto 3")
-                            .autor(AutorDTO.builder().id(1).nome("Eu").build())
-                            .dataLancamento(ZonedDateTime.now())
-                            .ISBN("ISBN")
-                            .quantidadeDePaginas(1)
-                            .build());     
+    @Autowired
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
     }
 
     @GetMapping
     public List<BookDTO> getAll(@RequestParam(required = false, value = "title") String titulo) {
         // @formater:off
-        return bookList.stream()
-                       .filter(bookDTO -> titulo == null || bookDTO.getTitulo().startsWith(titulo))
-                       .collect(Collectors.toList());
+        return this.bookService.getAll(titulo);
         // @formater:on
     }
 
     @GetMapping("{id}")
     public BookDTO findById(@PathVariable Integer id) {
         // @formater:off
-        return bookList.stream()
-                       .filter(bookDTO -> bookDTO.getId() == id)
-                       .findFirst()
-                       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return this.bookService.findById(id);
         // @formater:on
     }
 
     @PostMapping
-    public BookDTO create(@RequestBody CreateBookDTO createBookDTO) {
+    public BookDTO create(@RequestBody @Valid CreateBookDTO createBookDTO) {
         // @formater:off
-        BookDTO book = new BookDTO(createBookDTO, bookList.size() + 1);
-        bookList.add(book);
-        return book;
+        return this.bookService.create(createBookDTO);
         // @formater:on
     }
 
@@ -90,49 +57,24 @@ public class BookController {
     public BookDTO update(@PathVariable Integer id,
                           @RequestBody CreateBookDTO createBookDTO) {
         // @formater:off
-        BookDTO book = bookList.stream()
-                               .filter(bookDTO -> bookDTO.getId() == id)
-                               .findFirst()
-                               .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        book.setDataLancamento(createBookDTO.getDataLancamento());
-        book.setISBN(createBookDTO.getISBN());
-        book.setQuantidadeDePaginas(createBookDTO.getQuantidadeDePaginas());
-        book.setTitulo(createBookDTO.getTitulo());
-
-        return book;
+        return this.bookService.update(id, createBookDTO);
         // @formater:on
     }
-
 
     @PatchMapping("{id}")
     public BookDTO update(@PathVariable Integer id,
                           @RequestBody AutorDTO autor) {
         // @formater:off
-        BookDTO book = bookList.stream()
-                               .filter(bookDTO -> bookDTO.getId() == id)
-                               .findFirst()
-                               .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        book.setAutor(autor);
-
-        return book;
-
+        return this.bookService.update(id, autor);
         // @formater:on                            
     }
 
     @DeleteMapping("{id}")
     public void delete(@PathVariable Integer id) {
         // @formater:off
-        BookDTO book = bookList.stream()
-                                .filter(bookDTO -> bookDTO.getId() == id)
-                                .findFirst()
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        bookList.remove(book);
+        this.bookService.delete(id);
         // @formater:on
     }
-
-
 }
 
 
