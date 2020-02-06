@@ -7,4 +7,11 @@ spring:
         console:
             enabled: true
             path: /db
-    
+    security:
+        user:
+            name: admin
+            password: admin
+            roles: ADMIN
+jwt:
+    secret: fiapsecretjwt
+    expire: 1
